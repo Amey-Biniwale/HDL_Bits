@@ -135,6 +135,7 @@ endmodule
 ### Vectors
 
 1] Vectors
+
 Build a circuit that has one 3-bit input, then outputs the same vector, and also splits it into three separate 1-bit outputs. Connect output o0 to the input vector's position 0, o1 to position 1, etc.
 
 ```
@@ -171,6 +172,7 @@ endmodule
 
 3] Vector Part Select
 A 32-bit vector can be viewed as containing 4 bytes (bits [31:24], [23:16], etc.). Build a circuit that will reverse the byte ordering of the 4-byte word.
+
 
 AaaaaaaaBbbbbbbbCcccccccDddddddd => DdddddddCcccccccBbbbbbbbAaaaaaaa
 
@@ -212,7 +214,9 @@ Build a combinational circuit with four inputs, in[3:0].
 There are 3 outputs:
 
 out_and: output of a 4-input AND gate.
+
 out_or: output of a 4-input OR gate.
+
 out_xor: output of a 4-input XOR gate.
 
 ```
@@ -419,9 +423,7 @@ Recall that a full adder computes the sum and carry-out of a+b+cin.
 
 In summary, there are three modules in this design:
 
-top_module — Your top-level module that contains two of...
-add16, provided — A 16-bit adder module that is composed of 16 of...
-add1 — A 1-bit full adder module.
+top_module — Your top-level module that contains two of add16, provided — A 16-bit adder module that is composed of 16 of add1 — A 1-bit full adder module.
 
 <img width="870" height="869" alt="image" src="https://github.com/user-attachments/assets/d9427307-49d4-4357-98c0-1faf6802f24b" />
 
@@ -848,6 +850,7 @@ module bcd_fadd (
     input     cin,
     output   cout,
     output [3:0] sum );
+	
 Instantiate 100 copies of bcd_fadd to create a 100-digit BCD ripple-carry adder. Your adder should add two 100-digit BCD numbers (packed into 400-bit vectors) and a carry-in to produce a 100-digit sum and carry out.
 
 ```
@@ -1161,7 +1164,9 @@ endmodule
 You are given a four-bit input vector in[3:0]. We want to know some relationships between each bit and its neighbour:
 
 out_both: Each bit of this output vector should indicate whether both the corresponding input bit and its neighbour to the left (higher index) are '1'. For example, out_both[2] should indicate if in[2] and in[3] are both 1. Since in[3] has no neighbour to the left, the answer is obvious so we don't need to know out_both[3].
+
 out_any: Each bit of this output vector should indicate whether any of the corresponding input bit and its neighbour to the right are '1'. For example, out_any[2] should indicate if either in[2] or in[1] are 1. Since in[0] has no neighbour to the right, the answer is obvious so we don't need to know out_any[0].
+
 out_different: Each bit of this output vector should indicate whether the corresponding input bit is different from its neighbour to the left. For example, out_different[2] should indicate if in[2] is different from in[3]. For this part, treat the vector as wrapping around, so in[3]'s neighbour to the left is in[0].
 
 ```
@@ -1180,3 +1185,28 @@ module top_module(
 endmodule
 ```
 
+17] Even Longer Vectors
+
+You are given a 100-bit input vector in[99:0]. We want to know some relationships between each bit and its neighbour:
+
+out_both: Each bit of this output vector should indicate whether both the corresponding input bit and its neighbour to the left are '1'. For example, out_both[98] should indicate if in[98] and in[99] are both 1. Since in[99] has no neighbour to the left, the answer is obvious so we don't need to know out_both[99].
+
+out_any: Each bit of this output vector should indicate whether any of the corresponding input bit and its neighbour to the right are '1'. For example, out_any[2] should indicate if either in[2] or in[1] are 1. Since in[0] has no neighbour to the right, the answer is obvious so we don't need to know out_any[0].
+
+out_different: Each bit of this output vector should indicate whether the corresponding input bit is different from its neighbour to the left. For example, out_different[98] should indicate if in[98] is different from in[99]. For this part, treat the vector as wrapping around, so in[99]'s neighbour to the left is in[0].
+
+```
+module top_module( 
+    input [99:0] in,
+    output [98:0] out_both,
+    output [99:1] out_any,
+    output [99:0] out_different );
+    
+    assign out_both = in[98:0]&in[99:1];
+    assign out_any = in[99:1] | in[98:0];
+    assign out_different = in ^ {in[0], in[99:1]};
+
+endmodule
+```
+
+### 
