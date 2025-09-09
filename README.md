@@ -1209,4 +1209,384 @@ module top_module(
 endmodule
 ```
 
-### 
+### Combinational Logic - Multiplexers
+
+1] 2 to 1 Multiplexer
+
+Create a one-bit wide, 2-to-1 multiplexer. When sel=0, choose a. When sel=1, choose b.
+
+```
+module top_module( 
+    input a, b, sel,
+    output out ); 
+    
+    assign out = sel?b:a;
+
+endmodule
+```
+
+2] 2 to 1 bus multiplexer
+
+Create a 100-bit wide, 2-to-1 multiplexer. When sel=0, choose a. When sel=1, choose b.
+
+```
+module top_module( 
+    input [99:0] a, b,
+    input sel,
+    output [99:0] out );
+    
+    assign out = sel? b:a;
+
+endmodule
+```
+
+3] 9 to 1 multiplexer
+
+Create a 16-bit wide, 9-to-1 multiplexer. sel=0 chooses a, sel=1 chooses b, etc. For the unused cases (sel=9 to 15), set all output bits to '1'.
+
+```
+module top_module( 
+    input [15:0] a, b, c, d, e, f, g, h, i,
+    input [3:0] sel,
+    output [15:0] out );
+    
+    always @(*) begin
+        case(sel)
+            0: out=a;
+            1: out=b;
+            2: out=c;
+            3: out=d;
+            4: out=e;
+            5: out=f;
+            6: out=g;
+            7: out=h;
+            8: out=i;
+            default: out=16'hffff;
+        endcase
+    end
+
+endmodule
+```
+
+4] 256 to 1 multiplexer
+
+Create a 1-bit wide, 256-to-1 multiplexer. The 256 inputs are all packed into a single 256-bit input vector. sel=0 should select in[0], sel=1 selects bits in[1], sel=2 selects bits in[2], etc.
+
+```
+module top_module( 
+    input [255:0] in,
+    input [7:0] sel,
+    output out );
+    
+    assign out = in[sel];
+
+endmodule
+```
+
+5] 256 to 1 4-bit multiplexer
+
+Create a 4-bit wide, 256-to-1 multiplexer. The 256 4-bit inputs are all packed into a single 1024-bit input vector. sel=0 should select bits in[3:0], sel=1 selects bits in[7:4], sel=2 selects bits in[11:8], etc.
+
+```
+module top_module( 
+    input [1023:0] in,
+    input [7:0] sel,
+    output [3:0] out );
+    
+    assign out = in[sel*4 +: 4];
+
+endmodule
+```
+
+### Combinational Circuits - Arithmetic Circuits
+
+1] Half Adder
+
+Create a half adder. A half adder adds two bits (with no carry-in) and produces a sum and carry-out.
+
+```
+module top_module( 
+    input a, b,
+    output cout, sum );
+    
+    assign sum = a^b;
+    assign cout = a&b;
+
+endmodule
+```
+
+2] Full Adder
+
+Create a full adder. A full adder adds three bits (including carry-in) and produces a sum and carry-out.
+
+```
+module top_module( 
+    input a, b, cin,
+    output cout, sum );
+    
+    assign sum = a^b^cin;
+    assign cout = (a&b)|(b&cin)|(cin&a);
+
+endmodule
+```
+
+3] 3 bit binary adder
+
+Now that you know how to build a full adder, make 3 instances of it to create a 3-bit binary ripple-carry adder. The adder adds two 3-bit numbers and a carry-in to produce a 3-bit sum and carry out. To encourage you to actually instantiate full adders, also output the carry-out from each full adder in the ripple-carry adder. cout[2] is the final carry-out from the last full adder, and is the carry-out you usually see.
+
+```
+module top_module( 
+    input [2:0] a, b,
+    input cin,
+    output [2:0] cout,
+    output [2:0] sum );
+    
+    fa a1(a[0],b[0],cin,sum[0],cout[0]);
+    fa a2(a[1],b[1],cout[0],sum[1],cout[1]);
+    fa a3(a[2],b[2],cout[1],sum[2],cout[2]);
+
+endmodule
+
+module fa(input a,b,cin, output sum,cout);
+    
+    assign sum = a^b^cin;
+    assign cout = (a&b)|(b&cin)|(cin&a);
+    
+endmodule
+```
+
+4] Adder
+
+<img width="702" height="345" alt="image" src="https://github.com/user-attachments/assets/6be2f430-2ea1-4103-8621-1a7cc19ae07d" />
+
+```
+module top_module (
+    input [3:0] x,
+    input [3:0] y, 
+    output [4:0] sum);
+    wire [2:0] cout;
+    
+    fa a1(x[0],y[0],0,sum[0],cout[0]);
+    fa a2(x[1],y[1],cout[0],sum[1],cout[1]);
+    fa a3(x[2],y[2],cout[1],sum[2],cout[2]);
+    fa a4(x[3],y[3],cout[2],sum[3],sum[4]);
+
+endmodule
+
+module fa(input a,b,cin, output sum,cout);
+    
+    assign sum = a^b^cin;
+    assign cout = (a&b)|(b&cin)|(cin&a);
+    
+endmodule
+```
+
+5] Signed addition overflow
+
+Assume that you have two 8-bit 2's complement numbers, a[7:0] and b[7:0]. These numbers are added to produce s[7:0]. Also compute whether a (signed) overflow has occurred.
+
+```
+module top_module (
+    input [7:0] a,
+    input [7:0] b,
+    output [7:0] s,
+    output overflow
+); //
+ 
+    assign s = a+b;
+    assign overflow = (a[7]&b[7]&~s[7])|(~a[7]&~b[7]&s[7]);
+
+endmodule
+```
+
+6] 100 bit binary adder
+
+Create a 100-bit binary adder. The adder adds two 100-bit numbers and a carry-in to produce a 100-bit sum and carry out.
+
+```
+module top_module( 
+    input [99:0] a, b,
+    input cin,
+    output cout,
+    output [99:0] sum );
+    
+    assign {cout,sum} = a+b+cin;
+
+endmodule
+```
+
+7] 4 digit BCD adder
+
+You are provided with a BCD (binary-coded decimal) one-digit adder named bcd_fadd that adds two BCD digits and carry-in, and produces a sum and carry-out.
+
+module bcd_fadd (
+    input [3:0] a,
+    input [3:0] b,
+    input     cin,
+    output   cout,
+    output [3:0] sum );
+	
+Instantiate 4 copies of bcd_fadd to create a 4-digit BCD ripple-carry adder. Your adder should add two 4-digit BCD numbers (packed into 16-bit vectors) and a carry-in to produce a 4-digit sum and carry out.
+
+```
+module top_module ( 
+    input [15:0] a, b,
+    input cin,
+    output cout,
+    output [15:0] sum );
+    wire [4:0] car;
+    assign car[0]=cin;
+    assign cout=car[4];
+    
+    bcd_fadd f1(a[3:0],b[3:0],car[0],car[1],sum[3:0]);
+    bcd_fadd f2(a[7:4],b[7:4],car[1],car[2],sum[7:4]);
+    bcd_fadd f3(a[11:8],b[11:8],car[2],car[3],sum[11:8]);
+    bcd_fadd f4(a[15:12],b[15:12],car[3],car[4],sum[15:12]);
+    
+
+endmodule
+```
+
+### Combinational Logic - Karnaugh Map to Circuit
+
+1] 3 variable
+
+<img width="558" height="478" alt="image" src="https://github.com/user-attachments/assets/a570ee7e-8c31-4bea-9803-26f6cc9bb1e4" />
+
+```
+module top_module(
+    input a,
+    input b,
+    input c,
+    output out  ); 
+    
+    assign out = (a)|(b)|(c);
+
+endmodule
+```
+
+2] 4 variable
+
+<img width="591" height="437" alt="image" src="https://github.com/user-attachments/assets/06212eda-dca2-4253-bfa7-a9911102dd14" />
+
+```
+module top_module(
+    input a,
+    input b,
+    input c,
+    input d,
+    output out  ); 
+    
+    assign out = (~a&~d)|(~b&~c)|(c&d&(a|b));
+
+endmodule
+```
+
+3] 4 variable
+
+<img width="560" height="423" alt="image" src="https://github.com/user-attachments/assets/54459e77-6750-4fc9-bafa-66205268792a" />
+
+
+```
+module top_module(
+    input a,
+    input b,
+    input c,
+    input d,
+    output out  ); 
+    
+    assign out = a|(~b&c);
+
+endmodule
+```
+
+4] 4 variable
+
+<img width="554" height="410" alt="image" src="https://github.com/user-attachments/assets/b67bf45d-f8fe-40d9-89c9-e9a4d0088615" />
+
+```
+module top_module(
+    input a,
+    input b,
+    input c,
+    input d,
+    output out  ); 
+    
+    assign out = (~a&~b&~c&d)|(~a&~b&c&~d)|(~a&b&~c&~d)|(~a&b&c&d)|(a&~b&~c&~d)|(a&~b&c&d)|(a&b&~c&d)|(a&b&c&~d);
+
+endmodule
+```
+
+5] Minimum POS and SOP
+
+A single-output digital system with four inputs (a,b,c,d) generates a logic-1 when 2, 7, or 15 appears on the inputs, and a logic-0 when 0, 1, 4, 5, 6, 9, 10, 13, or 14 appears. The input conditions for the numbers 3, 8, 11, and 12 never occur in this system. For example, 7 corresponds to a,b,c,d being set to 0,1,1,1, respectively.
+
+Determine the output out_sop in minimum SOP form, and the output out_pos in minimum POS form.
+
+```
+module top_module (
+    input a,
+    input b,
+    input c,
+    input d,
+    output out_sop,
+    output out_pos
+); 
+    
+    assign out_sop = (c&d)|(~a&~b&c);
+    assign out_pos = c&(d|~a)&(d|~b);
+
+endmodule
+```
+
+6] Karnaugh Map
+
+<img width="964" height="380" alt="image" src="https://github.com/user-attachments/assets/d297c702-ea33-4b42-aa64-1d78b696f623" />
+
+```
+module top_module (
+    input [4:1] x, 
+    output f );
+    
+    assign f = (x[3]&~x[1])|(x[1]&x[2]&x[4]);
+
+endmodule
+```
+
+7] Karnaugh Map
+
+<img width="755" height="312" alt="image" src="https://github.com/user-attachments/assets/7af5e5a3-4a71-4b8e-bfbd-556948c4e8b8" />
+
+```
+module top_module (
+    input [4:1] x,
+    output f
+); 
+    
+    assign f = (x[3]&~x[1])|(~x[2]&~x[4])|(x[2]&x[3]&x[4]);
+
+endmodule
+```
+
+8] K-map implemented with multiplexer
+
+<img width="1325" height="661" alt="image" src="https://github.com/user-attachments/assets/963ea0e3-a53b-4ca1-8073-b225eb743ba1" />
+
+```
+module top_module (
+    input c,
+    input d,
+    output [3:0] mux_in
+); 
+    
+    assign mux_in[0] = (~c&d)|(c&d)|(c&~d);
+    assign mux_in[1] = 0;
+    assign mux_in[2] = (~c&~d)|(c&~d);
+    assign mux_in[3] = c&d;
+
+endmodule
+```
+
+### Sequential Logic - Latches and Flip Flops
+
+1]
