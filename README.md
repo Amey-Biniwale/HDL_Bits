@@ -1589,4 +1589,380 @@ endmodule
 
 ### Sequential Logic - Latches and Flip Flops
 
-1]
+1] D Flip Flop
+
+<img width="1319" height="314" alt="image" src="https://github.com/user-attachments/assets/67c740a9-1b07-4d7a-ad5b-7a0217ebf00b" />
+
+```
+module top_module (
+    input clk,    // Clocks are used in sequential circuits
+    input d,
+    output reg q );//
+
+    always @(posedge clk) begin
+       q = d; 
+    end
+
+endmodule
+```
+
+2] D flip flops
+
+Create 8 D flip-flops. All DFFs should be triggered by the positive edge of clk.
+
+```
+module top_module (
+    input clk,
+    input [7:0] d,
+    output [7:0] q
+);
+    
+    always @(posedge clk) begin
+       q <= d; 
+    end
+
+endmodule
+```
+
+3] DFF with reset
+
+Create 8 D flip-flops with active high synchronous reset. All DFFs should be triggered by the positive edge of clk.
+
+```
+module top_module (
+    input clk,
+    input reset,            // Synchronous reset
+    input [7:0] d,
+    output [7:0] q
+);
+    
+    always @(posedge clk) begin
+        if(reset) q <= 0;
+        else q <=d;
+    end
+
+endmodule
+```
+
+4] DFF with reset value
+
+Create 8 D flip-flops with active high synchronous reset. The flip-flops must be reset to 0x34 rather than zero. All DFFs should be triggered by the negative edge of clk.
+
+```
+module top_module (
+    input clk,
+    input reset,
+    input [7:0] d,
+    output [7:0] q
+);
+    
+    always @(negedge clk) begin
+        if(reset) q <= 8'h34;
+        else q <= d;
+    end
+
+endmodule
+```
+
+5] DFF with asynchronous reset
+
+Create 8 D flip-flops with active high asynchronous reset. All DFFs should be triggered by the positive edge of clk.
+
+```
+module top_module (
+    input clk,
+    input areset,   // active high asynchronous reset
+    input [7:0] d,
+    output [7:0] q
+);
+    
+    always @(posedge clk or posedge areset) begin
+        if(areset) q <= 0;
+        else q <= d;
+    end
+
+endmodule
+```
+
+6] DFF with Byte enable
+
+Create 16 D flip-flops. It's sometimes useful to only modify parts of a group of flip-flops. The byte-enable inputs control whether each byte of the 16 registers should be written to on that cycle. byteena[1] controls the upper byte d[15:8], while byteena[0] controls the lower byte d[7:0].
+
+resetn is a synchronous, active-low reset.
+
+All DFFs should be triggered by the positive edge of clk.
+
+```
+module top_module (
+    input clk,
+    input resetn,
+    input [1:0] byteena,
+    input [15:0] d,
+    output [15:0] q
+);
+    always @(posedge clk) begin
+        if(!resetn) begin
+           q <= 0; 
+        end
+        else begin
+            if(byteena[1]) begin
+                q[15:8] <= d[15:8]; 
+            end
+            if(byteena[0]) begin
+                q[7:0] <= d[7:0]; 
+            end
+        end
+    end
+
+endmodule
+```
+
+7] D Latch
+
+<img width="773" height="199" alt="image" src="https://github.com/user-attachments/assets/4d1ed4a3-bf43-4362-8259-e9f2fe83c7d2" />
+
+```
+module top_module (
+    input d, 
+    input ena,
+    output q);
+    
+    always @(*) begin
+        if(ena) q <= d; 
+    end
+
+endmodule
+```
+
+8] DFF
+
+<img width="346" height="202" alt="image" src="https://github.com/user-attachments/assets/78743364-f5e2-4cbb-8614-d124cb5bbe7c" />
+
+```
+module top_module (
+    input clk,
+    input d, 
+    input ar,   // asynchronous reset
+    output q);
+    
+    always @(posedge clk or posedge ar) begin
+        if(ar) q <= 0;
+        else q <= d;
+    end
+
+endmodule
+```
+
+9] DFF
+
+<img width="306" height="182" alt="image" src="https://github.com/user-attachments/assets/a0e9f7e0-e5d7-429d-a693-1d0eafc2e623" />
+
+```
+module top_module (
+    input clk,
+    input d, 
+    input r,   // synchronous reset
+    output q);
+    
+    always @(posedge clk) begin
+        if(r) q <= 0;
+        else q <= d;
+    end
+
+endmodule
+```
+
+10] DFF + gate
+
+<img width="575" height="273" alt="image" src="https://github.com/user-attachments/assets/a56435d1-8726-44a6-a0d3-928d04eeb469" />
+
+```
+module top_module (
+    input clk,
+    input in, 
+    output out);
+    
+    always @(posedge clk) begin
+       out <= in ^ out; 
+    end
+
+endmodule
+```
+
+11] Mux and DFF
+
+<img width="1261" height="581" alt="image" src="https://github.com/user-attachments/assets/8e3d2538-9c32-4717-b8c2-bead53547c8b" />
+
+```
+module top_module (
+	input clk,
+	input L,
+	input r_in,
+	input q_in,
+	output reg Q);
+    
+    always @(posedge clk) begin
+       Q <= L ? r_in:q_in; 
+    end
+
+endmodule
+```
+
+12] Mux and DFF
+
+<img width="1192" height="541" alt="image" src="https://github.com/user-attachments/assets/ce9c4be2-fd23-49e6-9ceb-7b3406f0be64" />
+
+```
+module top_module (
+    input clk,
+    input w, R, E, L,
+    output Q
+);
+    
+    always @(posedge clk) begin
+        Q <= L? R : (E? w: Q) ; 
+    end
+
+endmodule
+```
+
+13] DFFs and Gates
+
+<img width="1136" height="571" alt="image" src="https://github.com/user-attachments/assets/88b6f391-06ba-4fde-a61b-91dbd776e5da" />
+
+```
+module top_module (
+    input clk,
+    input x,
+    output z
+); 
+    wire w1,w2,w3;
+    
+     
+    
+    always @(posedge clk) begin
+        w1 <= x^w1;
+        w2 <= x & ~w2;
+        w3 <= x | ~w3;
+        
+    end
+    assign  z =~(w1|w2|w3);
+    
+endmodule
+```
+
+14] Create circuit from truth table
+
+<img width="1319" height="245" alt="image" src="https://github.com/user-attachments/assets/d1793dad-4584-4cc7-af4f-c73b20405f0f" />
+
+```
+module top_module (
+    input clk,
+    input j,
+    input k,
+    output Q); 
+    
+    always @(posedge clk) begin
+        Q <= j ? (k ? ~Q:1) : (k ? 0:Q) ;
+    end
+
+endmodule
+```
+
+15] Setect and edge
+
+
+<img width="1276" height="309" alt="image" src="https://github.com/user-attachments/assets/12479c94-c81e-4e2b-8095-c585f7f30ca3" />
+
+```
+module top_module (
+    input clk,
+    input [7:0] in,
+    output [7:0] pedge
+);
+    reg [7:0] last;
+    always @(posedge clk) begin
+        last <= in;
+        pedge <= ~last&in;
+    end
+
+endmodule
+```
+
+16] Detect both edges
+
+
+<img width="1296" height="315" alt="image" src="https://github.com/user-attachments/assets/1f15a0a4-6a07-4144-b838-f7dbb067ea77" />
+
+```
+module top_module (
+    input clk,
+    input [7:0] in,
+    output [7:0] anyedge
+);
+    reg [7:0] last;
+    always @(posedge clk) begin
+        last <= in;
+        
+        anyedge <= (~last & in)|(last & ~in);
+    end
+
+endmodule
+```
+
+17] Edge Capture Register
+
+
+<img width="1296" height="549" alt="image" src="https://github.com/user-attachments/assets/ff7f8146-12f6-4bc8-a39f-9154e27a4995" />
+
+```
+module top_module (
+    input clk,
+    input reset,
+    input [31:0] in,
+    output [31:0] out
+);
+    
+    reg [31:0] last;
+    
+    always @(posedge clk) begin
+        
+        if(reset) out <=0;
+        else begin
+           
+           out <= out | (~in&last); 
+        end
+        last <= in;
+    end
+
+endmodule
+```
+
+18] Dual edge-triggered Flip Flop
+
+<img width="1304" height="358" alt="image" src="https://github.com/user-attachments/assets/642b5cfb-cb79-42dd-8fc3-5196a3b1c481" />
+
+```
+module top_module (
+    input clk,
+    input d,
+    output q
+);
+    reg q1,q2;
+    
+    always @(posedge clk) begin
+       q1 <= d; 
+    end
+    
+    always @(negedge clk) begin
+       q2 <= d; 
+    end
+    
+    assign q = clk ? q1:q2;
+ 
+endmodule
+```
+
+### Sequential Logic - Counters
+
+1] 
