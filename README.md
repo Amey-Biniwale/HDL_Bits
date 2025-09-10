@@ -1965,4 +1965,263 @@ endmodule
 
 ### Sequential Logic - Counters
 
-1] 
+1] Four Bit Binary Counter
+
+Build a 4-bit binary counter that counts from 0 through 15, inclusive, with a period of 16. The reset input is synchronous, and should reset the counter to 0.
+
+```
+module top_module (
+    input clk,
+    input reset,      // Synchronous active-high reset
+    output [3:0] q);
+    
+    always @(posedge clk) begin
+        if(reset) q <= 0;
+        else q <= q+1;
+    end
+
+endmodule
+```
+
+2] Decade Counter
+
+Build a decade counter that counts from 0 through 9, inclusive, with a period of 10. The reset input is synchronous, and should reset the counter to 0.
+
+```
+module top_module (
+    input clk,
+    input reset,        // Synchronous active-high reset
+    output [3:0] q);
+    
+    always @(posedge clk) begin
+        if(reset) q <= 0;
+        else begin
+            if(q == 9) q <= 0;
+            else q <= q+1;
+        end
+    end
+
+endmodule
+```
+
+3] Decade Counter again
+
+Make a decade counter that counts 1 through 10, inclusive. The reset input is synchronous, and should reset the counter to 1.
+
+```
+module top_module (
+    input clk,
+    input reset,
+    output [3:0] q);
+    
+    always @(posedge clk) begin
+        if(reset) q <= 1;
+        else begin
+            if(q == 10) q <= 1;
+            else q <= q+1;
+        end
+    end
+
+endmodule
+```
+
+4] Slow Decade Counter
+
+Build a decade counter that counts from 0 through 9, inclusive, with a period of 10. The reset input is synchronous, and should reset the counter to 0. We want to be able to pause the counter rather than always incrementing every clock cycle, so the slowena input indicates when the counter should increment.
+
+```
+module top_module (
+    input clk,
+    input slowena,
+    input reset,
+    output [3:0] q);
+    
+    always @(posedge clk) begin
+        if(reset) q <= 0;
+        else begin
+            if(slowena) begin
+                if(q == 9) q <= 0;
+                else q <= q+1;
+            end
+            else q <= q;
+        end
+    end
+
+endmodule
+```
+
+5] Counter 1-12
+
+Design a 1-12 counter with the following inputs and outputs:
+
+Reset Synchronous active-high reset that forces the counter to 1
+
+Enable Set high for the counter to run
+
+Clk Positive edge-triggered clock input
+
+Q[3:0] The output of the counter
+
+c_enable, c_load, c_d[3:0] Control signals going to the provided 4-bit counter, so correct operation can be verified.
+
+You have the following components available:
+
+the 4-bit binary counter (count4) below, which has Enable and synchronous parallel-load inputs (load has higher priority than enable). The count4 module is provided to you. Instantiate it in your circuit.
+logic gates
+
+module count4(
+	input clk,
+	input enable,
+	input load,
+	input [3:0] d,
+	output reg [3:0] Q
+);
+
+The c_enable, c_load, and c_d outputs are the signals that go to the internal counter's enable, load, and d inputs, respectively. Their purpose is to allow these signals to be checked for correctness.
+
+```
+module top_module (
+    input clk,
+    input reset,     
+    input enable,     
+    output [3:0] Q,   
+    output c_enable,   
+    output c_load,    
+    output [3:0] c_d   
+);
+
+    reg load;
+    reg [3:0] d;
+    wire [3:0] q_int;
+
+    assign c_enable = enable;
+    assign c_load   = load;
+    assign c_d      = d;
+    assign Q        = q_int;
+
+    always @(*) begin
+        load = 1'b0;
+        d    = 4'b0000;
+        if (reset) begin
+            load = 1'b1;
+            d    = 4'd1;
+        end 
+        else if (q_int == 4'd12 && enable) begin
+            load = 1'b1;
+            d    = 4'd1;
+        end
+    end
+
+
+    count4 u_count4 (clk,enable,load,d,q_int);
+
+endmodule
+```
+
+6] Counter 1000
+
+From a 1000 Hz clock, derive a 1 Hz signal, called OneHertz, that could be used to drive an Enable signal for a set of hour/minute/second counters to create a digital wall clock. Since we want the clock to count once per second, the OneHertz signal must be asserted for exactly one cycle each second. Build the frequency divider using modulo-10 (BCD) counters and as few other gates as possible. Also output the enable signals from each of the BCD counters you use (c_enable[0] for the fastest counter, c_enable[2] for the slowest).
+
+The following BCD counter is provided for you. Enable must be high for the counter to run. Reset is synchronous and set high to force the counter to zero. All counters in your circuit must directly use the same 1000 Hz signal.
+
+module bcdcount (
+	input clk,
+	input reset,
+	input enable,
+	output reg [3:0] Q
+);
+
+```
+module top_module (
+    input clk,
+    input reset,
+    output OneHertz,
+    output [2:0] c_enable
+); 
+    wire [3:0] one;
+    wire [3:0] ten;
+    wire [3:0] hundred;
+    
+    wire one_9   = (one == 4'd9);
+    wire ten_9   = (ten == 4'd9);
+    wire hundred_9   = (hundred == 4'd9);
+
+    assign c_enable[0] = 1'b1;
+    assign c_enable[1] = one_9 & c_enable[0];
+    assign c_enable[2] = one_9 & ten_9 & c_enable[0];
+
+    assign OneHertz = one_9 & ten_9 & hundred_9;
+    
+    
+    bcdcount b1(clk ,reset, c_enable[0], one);
+    bcdcount b2(clk ,reset, c_enable[1], ten);
+    bcdcount b3(clk, reset, c_enable[2], hundred); 
+
+endmodule
+```
+
+7] 4 digit decimel counter
+
+<img width="1301" height="315" alt="image" src="https://github.com/user-attachments/assets/331860ce-e862-49ff-acd7-2251ddf4b2ea" />
+
+```
+module top_module (
+    input clk,
+    input reset,   // Synchronous active-high reset
+    output [3:1] ena,
+    output [15:0] q);
+    
+    always @(posedge clk) begin
+        if(reset) begin
+           q <= 0; 
+        end
+        else begin
+            if(q[3:0] == 9) begin
+                q[3:0] <= 0; 
+            end
+            else begin
+                q[3:0] <= q[3:0] + 1; 
+            end
+            
+            if(ena[1]) begin
+                if(q[7:4] == 9) begin
+                    q[7:4] <= 0; 
+                end
+                else begin
+                    q[7:4] <= q[7:4] + 1; 
+                end
+            end
+            if(ena[2]) begin
+                if(q[11:8] == 9) begin
+                    q[11:8] <= 0; 
+                end
+                else begin
+                    q[11:8] <= q[11:8] + 1; 
+                end
+            end
+            if(ena[3]) begin
+                if(q[15:12] == 9) begin
+                    q[15:12] <= 0; 
+                end
+                else begin
+                    q[15:12] <= q[15:12] + 1; 
+                end
+            end
+        end
+    end
+    
+    assign ena[1] = q[3:0] == 4'd9;
+    assign ena[2] = ena[1] & (q[7:4] == 4'd9);
+    assign ena[3] = ena[1] & ena[2] & (q[11:8] == 4'd9);
+
+endmodule
+```
+
+8] 12 hour clock
+
+<img width="1305" height="452" alt="image" src="https://github.com/user-attachments/assets/02290880-df25-4e09-bebb-c9a7b3b1e3a3" />
+
+
+```
+
+```
