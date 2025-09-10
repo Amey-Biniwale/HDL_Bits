@@ -2280,3 +2280,133 @@ module top_module(
 endmodule
 
 ```
+
+
+### Sequential Logic - Shift Registers
+
+1] 4 bit shift register
+
+Build a 4-bit shift register (right shift), with asynchronous reset, synchronous load, and enable.
+
+areset: Resets shift register to zero.
+load: Loads shift register with data[3:0] instead of shifting.
+ena: Shift right (q[3] becomes zero, q[0] is shifted out and disappears).
+q: The contents of the shift register.
+
+If both the load and ena inputs are asserted (1), the load input has higher priority.
+
+```
+module top_module(
+    input clk,
+    input areset,  // async active-high reset to zero
+    input load,
+    input ena,
+    input [3:0] data,
+    output reg [3:0] q); 
+    
+    always @(posedge clk or posedge areset) begin
+        if(areset) begin
+           q <= 0; 
+        end
+        else begin
+            if(load) begin
+               q <= data; 
+            end
+            else begin
+                if(ena) begin
+                    q <= q >> 1;
+               		q[3] = 0; 
+                end
+            end
+        end
+    end
+
+endmodule
+```
+
+2] Left/Right Rotator
+
+Build a 100-bit left/right rotator, with synchronous load and left/right enable. A rotator shifts-in the shifted-out bit from the other end of the register, unlike a shifter that discards the shifted-out bit and shifts in a zero. If enabled, a rotator rotates the bits around and does not modify/discard them.
+
+load: Loads shift register with data[99:0] instead of rotating.
+ena[1:0]: Chooses whether and which direction to rotate.
+
+2'b01 rotates right by one bit
+2'b10 rotates left by one bit
+2'b00 and 2'b11 do not rotate.
+
+q: The contents of the rotator.
+
+```
+module top_module(
+    input clk,
+    input load,
+    input [1:0] ena,
+    input [99:0] data,
+    output reg [99:0] q); 
+    
+    always @(posedge clk) begin
+        if(load) begin
+           q <= data; 
+        end
+        else begin
+            case(ena)
+                0: q <= q;
+                1: begin q <= q >>1; q[99] <= q[0]; end
+                2: begin q <= q <<1; q[0] <= q[99]; end
+                3: q <= q;
+            endcase
+        end
+    end
+
+endmodule
+```
+
+3] Left/ Right Arithmetic shift by 1 or 8
+
+Build a 64-bit arithmetic shift register, with synchronous load. The shifter can shift both left and right, and by 1 or 8 bit positions, selected by amount.
+
+An arithmetic right shift shifts in the sign bit of the number in the shift register (q[63] in this case) instead of zero as done by a logical right shift. Another way of thinking about an arithmetic right shift is that it assumes the number being shifted is signed and preserves the sign, so that arithmetic right shift divides a signed number by a power of two.
+
+There is no difference between logical and arithmetic left shifts.
+
+load: Loads shift register with data[63:0] instead of shifting.
+ena: Chooses whether to shift.
+amount: Chooses which direction and how much to shift.
+
+2'b00: shift left by 1 bit.
+2'b01: shift left by 8 bits.
+2'b10: shift right by 1 bit.
+2'b11: shift right by 8 bits.
+
+q: The contents of the shifter.
+
+```
+module top_module(
+    input clk,
+    input load,
+    input ena,
+    input [1:0] amount,
+    input [63:0] data,
+    output reg [63:0] q); 
+    
+    always @(posedge clk) begin
+        if(load) begin
+           q <= data; 
+        end
+        else begin
+            if(ena) begin
+                case(amount)
+                    0: q <= q << 1;
+                    1: q <= q << 8;
+                    2: q <= {q[63], q[63:1]};
+                    3: q <= {{8{q[63]}}, q[63:8]};
+                endcase
+            end
+        end
+    end
+
+endmodule
+```
+
+4] 
