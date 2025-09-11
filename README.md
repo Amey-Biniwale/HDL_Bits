@@ -2409,4 +2409,70 @@ module top_module(
 endmodule
 ```
 
-4] 
+4] 5 bit LFSR
+
+<img width="1337" height="409" alt="image" src="https://github.com/user-attachments/assets/8c849434-7b30-4c84-8661-8e9593de0bc1" />
+
+```
+module top_module(
+    input clk,
+    input reset,    // Active-high synchronous reset to 5'h1
+    output [4:0] q
+); 
+    
+    always @(posedge clk) begin
+        if(reset) begin
+           q <= 5'h1; 
+        end
+        else begin
+            q[4] <= q[0] ^ 0;
+            q[3] <= q[4];
+            q[2] <= q[3] ^ q[0];
+            q[1] <= q[2];
+            q[0] <= q[1];
+        end
+    end
+
+endmodule
+```
+
+5] 3 bit LFSR
+
+<img width="1317" height="574" alt="image" src="https://github.com/user-attachments/assets/594c238d-805d-4be4-ab1b-75759cb6ce0f" />
+
+```
+module top_module (
+	input [2:0] SW,      // R
+	input [1:0] KEY,     // L and clk
+	output [2:0] LEDR);  // Q
+    
+    mux_and_dff d1(KEY[0], KEY[1], SW[0], LEDR[2], LEDR[0]);
+    mux_and_dff d2(KEY[0] ,KEY[1], SW[1], LEDR[0], LEDR[1]);
+    mux_and_dff d3(KEY[0], KEY[1], SW[2], LEDR[1] ^ LEDR[2], LEDR[2]);
+
+
+endmodule
+
+module mux_and_dff (
+	input clk,
+	input L,
+	input r_in,
+	input q_in,
+	output reg Q);
+    
+    always @(posedge clk) begin
+       Q <= L ? r_in:q_in; 
+    end
+
+endmodule
+```
+
+6] 32 bit LFSR
+
+See Lfsr5 for explanations.
+
+Build a 32-bit Galois LFSR with taps at bit positions 32, 22, 2, and 1.
+
+```
+
+```
