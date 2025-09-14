@@ -2474,5 +2474,505 @@ See Lfsr5 for explanations.
 Build a 32-bit Galois LFSR with taps at bit positions 32, 22, 2, and 1.
 
 ```
+module top_module(
+    input clk,
+    input reset,   
+    output [31:0] q
+);
+  
+  always @(posedge clk) begin
+      if(reset) 
+        q <= 32'h1;
+      else begin
+        q <= {0^q[0], q[31:23], q[22]^q[0], q[21:3], q[2]^q[0], q[1]^q[0]};
+      end
+  end
+endmodule
+```
+
+7] Shift Register
+
+<img width="774" height="281" alt="image" src="https://github.com/user-attachments/assets/ae18dc27-472e-4815-8a6e-6947c3be6828" />
+
+```
+module top_module (
+    input clk,
+    input resetn,   // synchronous reset
+    input in,
+    output out);
+    
+    wire o1,o2,o3;
+    
+    always @(posedge clk) begin
+        if(!resetn) begin
+            out=0;o1=0;o2=0;o3=0;
+        end
+        else begin
+           o1 <= in;
+           o2 <= o1;
+           o3 <= o2;
+           out <= o3;
+        end
+    end
+
+endmodule
+```
+
+8] Shift Register
+
+<img width="1324" height="796" alt="image" src="https://github.com/user-attachments/assets/bd3ce4a3-e592-4f1f-ac55-5ad17f95d881" />
+
+```
+module top_module (
+    input [3:0] SW,
+    input [3:0] KEY,
+    output [3:0] LEDR
+); //
+    
+    MUXDFF d1(KEY[0], KEY[3], SW[3], KEY[1], KEY[2], LEDR[3]);
+    MUXDFF d2(KEY[0], LEDR[3], SW[2], KEY[1], KEY[2], LEDR[2]);
+    MUXDFF d3(KEY[0], LEDR[2], SW[1], KEY[1], KEY[2], LEDR[1]);
+    MUXDFF d4(KEY[0], LEDR[1], SW[0], KEY[1], KEY[2], LEDR[0]);
+
+endmodule
+
+module MUXDFF (
+    input clk,
+    input w, R, E, L,
+    output Q
+);
+    
+    always @(posedge clk) begin
+        Q <= L? R : (E? w: Q) ; 
+    end
+
+endmodule
+```
+
+9] 3 input LUT
+
+In this question, you will design a circuit for an 8x1 memory, where writing to the memory is accomplished by shifting-in bits, and reading is "random access", as in a typical RAM. You will then use the circuit to realize a 3-input logic function.
+
+First, create an 8-bit shift register with 8 D-type flip-flops. Label the flip-flop outputs from Q[0]...Q[7]. The shift register input should be called S, which feeds the input of Q[0] (MSB is shifted in first). The enable input controls whether to shift. Then, extend the circuit to have 3 additional inputs A,B,C and an output Z. The circuit's behaviour should be as follows: when ABC is 000, Z=Q[0], when ABC is 001, Z=Q[1], and so on. Your circuit should contain ONLY the 8-bit shift register, and multiplexers. (Aside: this circuit is called a 3-input look-up-table (LUT)).
+
+```
+module top_module (
+    input clk,
+    input enable,
+    input S,
+    input A, B, C,
+    output Z ); 
+    
+    reg [7:0] Q;
+    
+    always @(posedge clk) begin
+        if(enable) begin
+           Q <= {Q[6:0], S};
+        end
+    end
+    
+    always @(*) begin
+        Z <= Q[{A,B,C}];
+    end
+
+endmodule
+```
+
+
+### Sequential Logic - More Circuits
+
+1] Rule 90
+
+<img width="1315" height="609" alt="image" src="https://github.com/user-attachments/assets/8bac6101-3579-42a7-b8fc-7d353e98326d" />
+
+```
+module top_module(
+    input clk,
+    input load,
+    input [511:0] data,
+    output [511:0] q ); 
+    
+    always @(posedge clk) begin
+        if(load) begin
+           q <= data; 
+        end
+        else begin
+            q[0] <= q[1] ^ 0;
+            q[511] <= q[510] ^ 0;
+            for(int i=1;i<511;i++) begin
+                q[i] <= q[i-1] ^ q[i+1]; 
+            end
+        end
+    end
+
+endmodule
+```
+
+2] Rule 110
+
+<img width="1334" height="545" alt="image" src="https://github.com/user-attachments/assets/48712e4a-fb30-4b74-ae6b-1d30f8c57449" />
+
+```
+module top_module(
+    input clk,
+    input load,
+    input [511:0] data,
+    output [511:0] q ); 
+    
+    always @(posedge clk) begin
+        if(load) begin
+           q <= data; 
+        end
+        else begin
+            q <= (((q[511:0] ^ {q[510:0], 1'b0}) & q[511:1]) | ((q[511:0] | {q[510:0], 1'b0}) & (~q[511:1])));
+        end
+    end
+
+endmodule
+```
+
+3] Conway's Game of Life 16x16
+
+
+Conway's Game of Life is a two-dimensional cellular automaton.
+
+The "game" is played on a two-dimensional grid of cells, where each cell is either 1 (alive) or 0 (dead). At each time step, each cell changes state depending on how many neighbours it has:
+
+0-1 neighbour: Cell becomes 0.
+2 neighbours: Cell state does not change.
+3 neighbours: Cell becomes 1.
+4+ neighbours: Cell becomes 0.
+The game is formulated for an infinite grid. In this circuit, we will use a 16x16 grid. To make things more interesting, we will use a 16x16 toroid, where the sides wrap around to the other side of the grid. For example, the corner cell (0,0) has 8 neighbours: (15,1), (15,0), (15,15), (0,1), (0,15), (1,1), (1,0), and (1,15). The 16x16 grid is represented by a length 256 vector, where each row of 16 cells is represented by a sub-vector: q[15:0] is row 0, q[31:16] is row 1, etc. (This tool accepts SystemVerilog, so you may use 2D vectors if you wish.)
+
+load: Loads data into q at the next clock edge, for loading initial state.
+q: The 16x16 current state of the game, updated every clock cycle.
+The game state should advance by one timestep every clock cycle.
+
+```
+module top_module(
+    input clk,
+    input load,
+    input [255:0] data,
+    output reg [255:0] q
+);
+
+    reg [255:0] next;
+    integer r, c, dr, dc, rr, cc, idx;
+    integer count;
+
+    always @(*) begin
+        next = '0;
+        for (r = 0; r < 16; r = r + 1) begin
+            for (c = 0; c < 16; c = c + 1) begin
+                count = 0;
+                for (dr = -1; dr <= 1; dr = dr + 1) begin
+                    for (dc = -1; dc <= 1; dc = dc + 1) begin
+                        if (!(dr == 0 && dc == 0)) begin
+                            rr = (r + dr + 16) % 16;
+                            cc = (c + dc + 16) % 16;
+                            count = count + q[rr*16 + cc];
+                        end
+                    end
+                end
+                idx = r*16 + c;
+
+                case (count)
+                    2: next[idx] = q[idx];
+                    3: next[idx] = 1'b1; 
+                    default: next[idx] = 1'b0; 
+                endcase
+            end
+        end
+    end
+
+    always @(posedge clk) begin
+        if (load)
+            q <= data;
+        else
+            q <= next;
+    end
+
+endmodule
+```
+
+### Sequential Logic - Finite State Machines
+
+1] FSM 1
+
+<img width="1218" height="229" alt="image" src="https://github.com/user-attachments/assets/e9647761-7d1e-497c-a090-f0c05423feb4" />
+
+```
+module top_module(
+    input clk,
+    input areset,    // Asynchronous reset to state B
+    input in,
+    output out);//  
+
+    parameter A=0, B=1; 
+    reg state, next_state;
+
+    always @(*) begin    // This is a combinational always block
+        case(state)
+            A : next_state <= in ? A : B;
+            B : next_state <= in ? B : A;
+        endcase
+    end
+
+    always @(posedge clk, posedge areset) begin    // This is a sequential always block
+        if(areset) begin
+           state <= B; 
+        end
+        else begin
+           state <= next_state; 
+        end
+    end
+
+    assign out = state == B;
+
+endmodule
+```
+
+2] Simle FSM 1
+
+<img width="1199" height="226" alt="image" src="https://github.com/user-attachments/assets/149923b3-c910-45e4-aba8-fa8c0b9dc17d" />
+
+```
+// Note the Verilog-1995 module declaration syntax here:
+module top_module(clk, reset, in, out);
+    input clk;
+    input reset;    // Synchronous reset to state B
+    input in;
+    output out;//  
+    reg out;
+
+    parameter A = 0, B = 1;
+
+    reg present_state, next_state;
+
+    always @(posedge clk) begin
+        if(reset) begin
+           present_state <= B;
+        end
+        else begin
+           present_state <= next_state; 
+        end
+    end
+    
+    always @(*) begin
+        case(present_state)
+            A : next_state <= in?A:B;
+            B : next_state <= in?B:A;
+        endcase
+    end
+    
+    assign out = present_state == B;
+
+endmodule
+```
+
+3] Simple FSM 2
+
+<img width="918" height="224" alt="image" src="https://github.com/user-attachments/assets/3597faf8-daf3-490e-b3e4-77baf5a0080d" />
+
+
+```
+module top_module(
+    input clk,
+    input areset,    // Asynchronous reset to OFF
+    input j,
+    input k,
+    output out); //  
+
+    parameter OFF=0, ON=1; 
+    reg present_state, next_state;
+
+    always @(posedge clk or posedge areset) begin
+        if(areset) begin
+           present_state <= OFF;
+        end
+        else begin
+           present_state <= next_state; 
+        end
+    end
+    
+    always @(*) begin
+        case(present_state)
+            OFF : next_state <= j?ON:OFF;
+            ON : next_state <= k?OFF:ON;
+        endcase
+    end
+    
+    assign out = present_state == ON;
+
+endmodule
+```
+
+4] Simple FSM 2
+
+<img width="945" height="231" alt="image" src="https://github.com/user-attachments/assets/83c276be-7b0c-40af-856f-f3e6562c0f03" />
+
+```
+module top_module(
+    input clk,
+    input reset,    // Synchronous reset to OFF
+    input j,
+    input k,
+    output out); //  
+
+    parameter OFF=0, ON=1; 
+    reg present_state, next_state;
+
+    always @(posedge clk) begin
+        if(reset) begin
+           present_state <= OFF;
+        end
+        else begin
+           present_state <= next_state; 
+        end
+    end
+    
+    always @(*) begin
+        case(present_state)
+            OFF : next_state <= j?ON:OFF;
+            ON : next_state <= k?OFF:ON;
+        endcase
+    end
+    
+    assign out = present_state == ON;
+
+endmodule
+```
+
+5] Simple State Transitions 3
+
+<img width="1317" height="367" alt="image" src="https://github.com/user-attachments/assets/526bdc4e-2475-4e39-ab43-2ac1a6612cb6" />
+
+```
+module top_module(
+    input in,
+    input [1:0] state,
+    output [1:0] next_state,
+    output out); //
+
+    parameter A=0, B=1, C=2, D=3;
+
+    always @(*) begin
+        case(state)
+            A : next_state <= in?B:A;
+            B : next_state <= in?B:C;
+            C : next_state <= in?D:A;
+            D : next_state <= in?B:C;
+        endcase
+    end
+
+    assign out = state == D;
+
+endmodule
+```
+
+6] Simple one-hot state transitions 3
+
+<img width="1301" height="437" alt="image" src="https://github.com/user-attachments/assets/12d10037-fe44-4ec6-80f6-6dd286227f53" />
+
+```
+module top_module(
+    input in,
+    input [3:0] state,
+    output [3:0] next_state,
+    output out); //
+
+    parameter A=0, B=1, C=2, D=3;
+
+    // State transition logic: Derive an equation for each state flip-flop.
+    assign next_state[A] = (state[A]&~in)|(state[C]&~in);
+    assign next_state[B] = (state[A]&in)|(state[B]&in)|(state[D]&in);
+    assign next_state[C] = (state[B]&~in)|(state[D]&~in);
+    assign next_state[D] = (state[C]&in);
+
+    // Output logic: 
+    assign out = state[D];
+
+endmodule
+```
+
+7] Simple FSM 3
+
+<img width="1261" height="282" alt="image" src="https://github.com/user-attachments/assets/d2c41849-7a36-4e12-9a97-d6f6cc260741" />
+
+```
+module top_module(
+    input clk,
+    input in,
+    input areset,
+    output out); //
+
+    reg [1:0] PS,NS;
+    parameter A=0,B=1,C=2,D=3;
+
+    always @(posedge clk or posedge areset) begin
+        if(areset) begin
+           PS <= A; 
+        end
+        else begin
+           PS <= NS; 
+        end
+    end
+    
+    always @(*) begin
+        case(PS)
+            A : NS <= in ? B : A;
+            B : NS <= in ? B : C;
+            C : NS <= in ? D : A;
+            D : NS <= in ? B : C;
+        endcase
+    end
+
+    assign out = PS == D;
+
+endmodule
+```
+
+8] Simple FSM 3
+
+<img width="1252" height="283" alt="image" src="https://github.com/user-attachments/assets/c7757a65-02cf-4e5e-99c6-d191486f4e7d" />
+
+```
+module top_module(
+    input clk,
+    input in,
+    input reset,
+    output out); //
+
+    reg [1:0] PS,NS;
+    parameter A=0,B=1,C=2,D=3;
+
+    always @(posedge clk) begin
+        if(reset) begin
+           PS <= A; 
+        end
+        else begin
+           PS <= NS; 
+        end
+    end
+    
+    always @(*) begin
+        case(PS)
+            A : NS <= in ? B : A;
+            B : NS <= in ? B : C;
+            C : NS <= in ? D : A;
+            D : NS <= in ? B : C;
+        endcase
+    end
+
+    assign out = PS == D;
+
+endmodule
+```
+
+9] Design a Moore FSM
+
+<img width="1354" height="802" alt="image" src="https://github.com/user-attachments/assets/88717d7d-8233-47d2-98e6-045d3e2e905f" />
+
+```
 
 ```
