@@ -3026,4 +3026,10 @@ module top_module (
 endmodule
 ```
 
-10] 
+10] Lemmings 1
+
+<img width="1170" height="400" alt="image" src="https://github.com/user-attachments/assets/e174ed98-d559-4d6b-834f-ca962e4338eb" />
+
+```
+
+```
